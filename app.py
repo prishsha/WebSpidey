@@ -1,29 +1,51 @@
 from crawler import crawl
 from sqlScanner import scan_sql_injection
+from xssScanner import scan_xss
 
 def main():
-    print("=== WebSpidey Vulnerability Scanner ===\n")
+    print("\n")
+    print("   WebSpidey Vulnerability Scanner  ")
+    print("\n")
 
-    target_url = input("Enter target URL: ")
+    target_url = input("Enter target URL: ").strip()
 
-    print("\n[1] Crawling the website...")
+    print("\n[+] Crawling target website...")
     urls = crawl(target_url)
 
-    print(f"Found {len(urls)} URLs\n")
+    print(f"[+] Total URLs discovered: {len(urls)}\n")
 
-    print("[2] Scanning for SQL Injection vulnerabilities...")
+    # SQL Injection 
+    print("[+] Running SQL Injection scan...")
     sqli_results = scan_sql_injection(urls)
 
-    print("\n=== Scan Report ===")
+    # XSS 
+    print("[+] Running XSS scan...")
+    xss_results = scan_xss(urls)
 
+    # REPORT 
+    print("\nSCAN REPORT\n")
+
+    # SQL Injection Report
+    print("[SQL Injection]")
     if sqli_results:
-        print("\n[SQL Injection]")
-        print("Status: VULNERABLE ")
+        print("Status: VULNERABLE ❌")
         for url in sqli_results:
             print(" -", url)
     else:
-        print("\n[SQL Injection]")
-        print("Status: NOT DETECTED ")
+        print("Status: NOT DETECTED ✅")
+
+    print("\n\n")
+
+    # XSS Report
+    print("[Cross-Site Scripting (XSS)]")
+    if xss_results:
+        print("Status: VULNERABLE ❌")
+        for url in xss_results:
+            print(" -", url)
+    else:
+        print("Status: NOT DETECTED ✅")
+
+    print("\n")
 
 if __name__ == "__main__":
     main()

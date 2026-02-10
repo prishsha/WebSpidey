@@ -28,22 +28,22 @@ def main():
     # SQL Injection Report
     print("[SQL Injection]")
     if sqli_results:
-        print("Status: VULNERABLE ❌")
+        print("Status: VULNERABLE")
         for url in sqli_results:
             print(" -", url)
     else:
-        print("Status: NOT DETECTED ✅")
+        print("Status: NOT DETECTED")
 
     print("\n\n")
 
     # XSS Report
     print("[Cross-Site Scripting (XSS)]")
     if xss_results:
-        print("Status: VULNERABLE ❌")
+        print("Status: VULNERABLE")
         for url in xss_results:
             print(" -", url)
     else:
-        print("Status: NOT DETECTED ✅")
+        print("Status: NOT DETECTED")
 
     print("\n")
 

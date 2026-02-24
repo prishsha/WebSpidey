@@ -1,66 +1,35 @@
+from flask import Flask, render_template, request
+
 from crawler import crawl
 from sqlScanner import scan_sql_injection
 from xssScanner import scan_xss
 from headerScanner import scan_headers
 
-def main():
-    print("   WebSpidey Vulnerability Scanner  ")
-    print("\n")
+app = Flask(__name__)
 
-    target_url = input("Enter target URL: ").strip()
+@app.route("/", methods=["GET", "POST"])
+def index():
+    results = None
+    discovered_urls = []
 
-    # crawling
-    print("\n[+] Crawling target website...")
-    urls = crawl(target_url)
-    print(f"[+] Total URLs discovered: {len(urls)}\n")
+    if request.method == "POST":
+        target_url = request.form.get("url")
 
-    # sql injection
-    print("[+] Running SQL Injection scan...")
-    sqli_results = scan_sql_injection(urls)
+        # Run crawler
+        discovered_urls = crawl(target_url)
 
-    # xss
-    print("[+] Running XSS scan...")
-    xss_results = scan_xss(urls)
+        # Run scanners
+        sqli = scan_sql_injection(discovered_urls)
+        xss = scan_xss(discovered_urls)
+        headers = scan_headers(target_url)
 
-    # headers
-    print("[+] Checking Security Headers...")
-    header_results = scan_headers(target_url)
+        results = {
+            "sqli": sqli,
+            "xss": xss,
+            "headers": headers
+        }
 
-    # report
-    print("\nFINAL SCAN REPORT\n")
-
-    # SQL Injection
-    print("[SQL Injection]")
-    if sqli_results:
-        print("Status: VULNERABLE")
-        for url in sqli_results:
-            print(" -", url)
-    else:
-        print("Status: NOT DETECTED")
-
-    print("\n")
-
-    # XSS
-    print("[Cross-Site Scripting (XSS)]")
-    if xss_results:
-        print("Status: VULNERABLE")
-        for url in xss_results:
-            print(" -", url)
-    else:
-        print("Status: NOT DETECTED")
-
-    print("\n")
-
-    # Headers
-    print("[Security Headers]")
-    if header_results:
-        print("Missing Headers")
-        for header in header_results:
-            print(" -", header)
-    else:
-        print("All Required Headers Present")
-
-    print("\n")
+    return render_template("index.html", results=results, urls=discovered_urls)
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, port=5000)

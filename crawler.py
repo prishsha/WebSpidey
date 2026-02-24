@@ -1,19 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
-def crawl(url):
-    links = []
+def crawl(start_url):
+    found_links = []
 
     try:
-        response = requests.get(url, timeout=5)
-        soup = BeautifulSoup(response.text, "html.parser")
+        r = requests.get(start_url)
+        soup = BeautifulSoup(r.text, "html.parser")
 
-        for a in soup.find_all("a"):
-            href = a.get("href")
-            if href and href.startswith("http"):
-                links.append(href)
+        tags = soup.find_all("a")
+
+        for t in tags:
+            href = t.get("href")
+
+            if href:
+                # convert relative → absolute URL
+                full_url = urljoin(start_url, href)
+
+                if full_url not in found_links:
+                    found_links.append(full_url)
 
     except Exception as e:
-        print("Crawler error:", e)
+        print("Error while crawling:", e)
 
-    return links
+    return found_links

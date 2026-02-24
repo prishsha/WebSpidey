@@ -5,9 +5,11 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     return """
-    <h2>Demo Application</h2>
-    <p>Testing SQL Injection Detection</p>
-    <a href="/login">Login</a>
+    <h2>Demo Application - Iteration 2</h2>
+    <p>Now includes SQL Injection + XSS vulnerability</p>
+
+    <a href="/login">Login (SQLi)</a><br><br>
+    <a href="/search">Search (XSS)</a>
     """
 
 # SQL INJECTION VULNERABILITY 
@@ -39,6 +41,25 @@ def login():
         Password: <input name="password"><br><br>
         <button type="submit">Login</button>
     </form>
+    """
+
+# XSS VULNERABILITY 
+
+@app.route("/search")
+def search():
+    term = request.args.get("q", "")
+
+    # intentionally reflecting user input without sanitization
+    return f"""
+    <h2>Search Page</h2>
+
+    <form>
+        <input name="q" placeholder="Search something">
+        <button type="submit">Search</button>
+    </form>
+
+    <h3>Results for: {term}</h3>
+    <p style='color:red;'>Input reflected directly → XSS possible.</p>
     """
 
 if __name__ == "__main__":

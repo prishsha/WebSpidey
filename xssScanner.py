@@ -1,23 +1,36 @@
 import requests
+from bs4 import BeautifulSoup
 
-def scan_xss(urls):
-    """
-    Performs basic reflected XSS detection
-    """
-
+def scan_xss(url_list):
     payload = "<script>alert(1)</script>"
-    vulnerable_urls = []
+    vulnerable = []
 
-    for url in urls:
+    for url in url_list:
         try:
-            test_url = url + "?test=" + payload
-            response = requests.get(test_url, timeout=5)
+            res = requests.get(url)
+            soup = BeautifulSoup(res.text, "html.parser")
 
-            # If payload is reflected back, XSS may exist
-            if payload in response.text:
-                vulnerable_urls.append(url)
+            forms = soup.find_all("form")
+
+            for form in forms:
+                method = form.get("method", "get").lower()
+                inputs = form.find_all("input")
+
+                data = {}
+                for inp in inputs:
+                    name = inp.get("name")
+                    if name:
+                        data[name] = payload
+
+                if method == "post":
+                    response = requests.post(url, data=data)
+                else:
+                    response = requests.get(url, params=data)
+
+                if payload in response.text:
+                    vulnerable.append(url)
 
         except Exception:
-            pass
+            continue
 
-    return vulnerable_urls
+    return list(set(vulnerable))

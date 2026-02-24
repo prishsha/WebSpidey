@@ -18,13 +18,18 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # intentionally unsafe query simulation
         query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+
+        # simulate SQL error when injection happens
+        if "'" in username or "'" in password:
+            return """
+            <h3>Database Error:</h3>
+            <p>You have an error in your SQL syntax near '' OR '1'='1'</p>
+            """
 
         return f"""
         <h3>Executed Query:</h3>
         <p>{query}</p>
-        <p style='color:red;'>Input not sanitized → SQL Injection possible.</p>
         """
 
     return """

@@ -5,11 +5,10 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     return """
-    <h2>Demo Application - Iteration 2</h2>
-    <p>Now includes SQL Injection + XSS vulnerability</p>
+    <h2>Demo Application</h2>
 
-    <a href="/login">Login (SQLi)</a><br><br>
-    <a href="/search">Search (XSS)</a>
+    <a href="/login">Login - SQLi</a><br><br>
+    <a href="/search">Search - XSS</a>
     """
 
 # SQL INJECTION VULNERABILITY 

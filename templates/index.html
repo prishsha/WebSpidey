@@ -111,6 +111,11 @@
 <hr>
 <h3>Scan Results</h3>
 
+<h4>OWASP Risk Score</h4>
+<p><b>Score:</b> {{ results.owasp_risk.score }} / 10<br>
+<b>Level:</b> {{ results.owasp_risk.level }}</p>
+<p><b>Summary:</b> SQLi={{ results.owasp_risk.details.sql_injection_count }}, XSS={{ results.owasp_risk.details.xss_count }}, Missing headers={{ results.owasp_risk.details.missing_headers_count }}</p>
+
 <h4>SQL Injection</h4>
 {% if results.sqli %}
 <p class="vuln"><b>Vulnerable</b></p>
@@ -147,6 +152,11 @@
 <p class="safe"><b>All Required Headers Present</b></p>
 {% endif %}
 
+{% endif %}
+
+{% if results %}
+<hr>
+<button onclick="window.location.href='/download_pdf'">Download PDF Report</button>
 {% endif %}
 
 <script>

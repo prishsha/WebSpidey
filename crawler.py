@@ -11,7 +11,7 @@ def crawl(start_url):
     print(f"[+] Crawl limit set to {MAX_URLS} URLs (demo mode)")
 
     try:
-        response = requests.get(start_url, timeout=5)
+        response = requests.get(start_url, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
 
         base_domain = urlparse(start_url).netloc

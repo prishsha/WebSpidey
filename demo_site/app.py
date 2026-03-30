@@ -1,56 +1,65 @@
-from flask import Flask, render_template, request, session
-
-from crawler import crawl
-from sqlScanner import scan_sql_injection
-from xssScanner import scan_xss
-from headerScanner import scan_headers
-
-from services.risk import classify_owasp_risk, generate_security_suggestions
-from services.pdf_generator import generate_pdf
+from flask import Flask, request
 
 app = Flask(__name__)
-app.secret_key = 'webspidey_secret_key'
 
+@app.route("/")
+def home():
+    return """
+    <h2>Demo Application</h2>
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    results = None
-    discovered_urls = []
+    <a href="/login">Login - SQLi</a><br><br>
+    <a href="/search">Search - XSS</a>
+    """
 
+# SQL INJECTION VULNERABILITY 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
     if request.method == "POST":
-        target_url = request.form.get("url")
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        discovered_urls = crawl(target_url)
-        sqli = scan_sql_injection(discovered_urls)
-        xss = scan_xss(discovered_urls)
-        headers = scan_headers(target_url)
+        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
 
-        owasp_risk = classify_owasp_risk(sqli, xss, headers, discovered_urls)
+        # simulate SQL error when injection happens
+        if "'" in username or "'" in password:
+            return """
+            <h3>Database Error:</h3>
+            <p>You have an error in your SQL syntax near '' OR '1'='1'</p>
+            """
 
-        results = {
-            "sqli": sqli,
-            "xss": xss,
-            "headers": headers,
-            "owasp_risk": owasp_risk
-        }
+        return f"""
+        <h3>Executed Query:</h3>
+        <p>{query}</p>
+        """
 
-        results["suggestions"] = generate_security_suggestions(results, discovered_urls)
+    return """
+    <h2>Login Page</h2>
+    <form method="POST">
+        Username: <input name="username"><br><br>
+        Password: <input name="password"><br><br>
+        <button type="submit">Login</button>
+    </form>
+    """
 
-        session['results'] = results
-        session['urls'] = discovered_urls
-        session['target_url'] = target_url
+# XSS VULNERABILITY 
 
-    return render_template("index.html", results=results, urls=discovered_urls)
+@app.route("/search")
+def search():
+    term = request.args.get("q", "")
 
+    # intentionally reflecting user input without sanitization
+    return f"""
+    <h2>Search Page</h2>
 
-@app.route('/download_pdf')
-def download_pdf():
-    return generate_pdf(
-        session.get('results'),
-        session.get('urls', []),
-        session.get('target_url', '')
-    )
+    <form>
+        <input name="q" placeholder="Search something">
+        <button type="submit">Search</button>
+    </form>
 
+    <h3>Results for: {term}</h3>
+    <p style='color:red;'>Input reflected directly → XSS possible.</p>
+    """
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=9000, debug=True)

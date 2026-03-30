@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>WebSpidey Vulnerability Scanner</title>
 
@@ -11,7 +12,9 @@
             color: #e4e4e4;
         }
 
-        h2, h3, h4 {
+        h2,
+        h3,
+        h4 {
             color: #ffffff;
         }
 
@@ -48,8 +51,13 @@
             margin: 30px 0;
         }
 
-        .vuln { color: #ff5c5c; }
-        .safe { color: #4caf50; }
+        .vuln {
+            color: #ff5c5c;
+        }
+
+        .safe {
+            color: #4caf50;
+        }
 
         /* Loading Overlay */
         #loading {
@@ -59,7 +67,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(18,18,18,0.95);
+            background: rgba(18, 18, 18, 0.95);
             z-index: 9999;
             text-align: center;
             padding-top: 200px;
@@ -77,7 +85,9 @@
         }
 
         @keyframes spin {
-            100% { transform: rotate(360deg); }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Chatbot Styles */
@@ -93,7 +103,7 @@
             border-radius: 50%;
             font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             padding: 0;
             outline: none;
@@ -111,7 +121,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         .modal-content {
@@ -181,172 +191,143 @@
 
 <body>
 
-<!-- Loading Screen -->
-<div id="loading">
-    <div class="spinner"></div>
-    <h3>Scanning website... Please wait</h3>
-</div>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <h3>Scanning website... Please wait</h3>
+    </div>
 
-<h2>🕷️ WebSpidey Vulnerability Scanner</h2>
+    <h2>🕷️ WebSpidey Vulnerability Scanner</h2>
 
-<form method="POST" onsubmit="showLoading()">
-    <input type="text" name="url" placeholder="Enter URL (e.g. http://127.0.0.1:9000)" required>
-    <button type="submit">Scan</button>
-</form>
+    <form method="POST" onsubmit="showLoading()">
+        <input type="text" name="url" placeholder="Enter URL (e.g. http://127.0.0.1:9000)" required>
+        <button type="submit">Scan</button>
+    </form>
 
-{% if urls %}
-<hr>
-<h3>Discovered URLs</h3>
-<ul>
-    {% for u in urls %}
+    {% if urls %}
+    <hr>
+    <h3>Discovered URLs</h3>
+    <ul>
+        {% for u in urls %}
         <li>{{ u }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+        {% endfor %}
+    </ul>
+    {% endif %}
 
-{% if results %}
-<hr>
-<h3>Scan Results</h3>
+    {% if results %}
+    <hr>
+    <h3>Scan Results</h3>
 
-<h4>OWASP Risk Score</h4>
-<p><b>Score:</b> {{ results.owasp_risk.score }} / 10<br>
-<b>Level:</b> {{ results.owasp_risk.level }}</p>
-<p><b>Summary:</b> SQLi={{ results.owasp_risk.details.sql_injection_count }}, XSS={{ results.owasp_risk.details.xss_count }}, Missing headers={{ results.owasp_risk.details.missing_headers_count }}</p>
+    <h4>OWASP Risk Score</h4>
+    <p><b>Score:</b> {{ results.owasp_risk.score }} / 10<br>
+        <b>Level:</b> {{ results.owasp_risk.level }}
+    </p>
+    <p><b>Summary:</b> SQLi={{ results.owasp_risk.details.sql_injection_count }}, XSS={{
+        results.owasp_risk.details.xss_count }}, Missing headers={{ results.owasp_risk.details.missing_headers_count }}
+    </p>
 
-<h4>SQL Injection</h4>
-{% if results.sqli %}
-<p class="vuln"><b>Vulnerable</b></p>
-<ul>
-{% for u in results.sqli %}
-    <li>{{ u }}</li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="safe"><b>Not Detected</b></p>
-{% endif %}
+    <h4>SQL Injection</h4>
+    {% if results.sqli %}
+    <p class="vuln"><b>Vulnerable</b></p>
+    <ul>
+        {% for u in results.sqli %}
+        <li>{{ u }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>Not Detected</b></p>
+    {% endif %}
 
-<h4>XSS</h4>
-{% if results.xss %}
-<p class="vuln"><b>Vulnerable</b></p>
-<ul>
-{% for u in results.xss %}
-    <li>{{ u }}</li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="safe"><b>Not Detected</b></p>
-{% endif %}
+    <h4>XSS</h4>
+    {% if results.xss %}
+    <p class="vuln"><b>Vulnerable</b></p>
+    <ul>
+        {% for u in results.xss %}
+        <li>{{ u }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>Not Detected</b></p>
+    {% endif %}
 
-<h4>Security Headers</h4>
-{% if results.headers %}
-<p class="vuln"><b>Missing Headers:</b></p>
-<ul>
-{% for h in results.headers %}
-    <li>{{ h }}</li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="safe"><b>All Required Headers Present</b></p>
-{% endif %}
+    <h4>Security Headers</h4>
+    {% if results.headers %}
+    <p class="vuln"><b>Missing Headers:</b></p>
+    <ul>
+        {% for h in results.headers %}
+        <li>{{ h }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>All Required Headers Present</b></p>
+    {% endif %}
 
-{% endif %}
+    {% endif %}
 
-<!-- Chatbot Modal -->
-<div id="chatbot-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>🛡️ Security Assistant</h3>
-        <div id="chat-messages"></div>
-        <div id="question-buttons">
-            <button class="question-btn" data-question="improve_score">How can I improve my security score?</button>
-            <button class="question-btn" data-question="add_headers">What security headers should I add?</button>
-            <button class="question-btn" data-question="fix_sqli">How to fix SQL injection vulnerabilities?</button>
-            <button class="question-btn" data-question="fix_xss">How to fix XSS vulnerabilities?</button>
-            <button class="question-btn" data-question="best_practices">General security best practices</button>
+    <!-- Chatbot Modal -->
+    <div id="chatbot-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🛡️ Security Assistant</h3>
+            <div id="chat-messages">
+                {% if results and results.suggestions %}
+                {% for suggestion in results.suggestions %}
+                <div class="message bot-message">{{ suggestion }}</div>
+                {% endfor %}
+                {% endif %}
+            </div>
+            <div id="question-buttons">
+                <button class="question-btn" data-question="improve_score">How can I improve my security score?</button>
+                <button class="question-btn" data-question="add_headers">What security headers should I add?</button>
+                <button class="question-btn" data-question="fix_sqli">How to fix SQL injection vulnerabilities?</button>
+                <button class="question-btn" data-question="fix_xss">How to fix XSS vulnerabilities?</button>
+                <button class="question-btn" data-question="best_practices">General security best practices</button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Floating Chatbot Button -->
-<button id="chatbot-btn">🛡️</button>
+    <!-- Floating Chatbot Button -->
+    <button id="chatbot-btn">🛡️</button>
 
-{% if results %}
-<hr>
-<button onclick="window.location.href='/download_pdf'">Download PDF Report</button>
-{% endif %}
+    {% if results %}
+    <hr>
+    <button onclick="window.location.href='/download_pdf'">Download PDF Report</button>
+    {% endif %}
 
-<script>
-// Get DOM elements
+    <script>
 const chatbotBtn = document.getElementById('chatbot-btn');
 const modal = document.getElementById('chatbot-modal');
 const closeBtn = document.querySelector('.close');
-const questionButtons = document.querySelectorAll('.question-btn');
-const chatMessages = document.getElementById('chat-messages');
 
 // Open modal
-if (chatbotBtn) {
-    chatbotBtn.addEventListener('click', function() {
-        modal.style.display = 'block';
-    });
-}
+chatbotBtn.onclick = () => modal.style.display = "block";
 
-// Close modal (❌ THIS WAS MISSING)
-if (closeBtn) {
-    closeBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-}
+// Close modal
+closeBtn.onclick = () => modal.style.display = "none";
 
-// Close when clicking outside modal
-window.addEventListener('click', function(event) {
+// Outside click close
+window.onclick = (event) => {
     if (event.target === modal) {
-        modal.style.display = 'none';
+        modal.style.display = "none";
     }
-});
+};
 
-// Question buttons logic (❌ ALSO MISSING)
-questionButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        const question = this.innerText;
+// Dynamic filtering (THIS IS COOL 🔥)
+document.querySelectorAll('.question-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const type = btn.dataset.question.toLowerCase();
+        const messages = document.querySelectorAll('.bot-message');
 
-        // Add user message
-        const userMsg = document.createElement('div');
-        userMsg.className = 'message user-message';
-        userMsg.innerText = question;
-        chatMessages.appendChild(userMsg);
-
-        // Fake bot response (you can replace with API later)
-        const botMsg = document.createElement('div');
-        botMsg.className = 'message bot-message';
-        botMsg.innerText = getBotResponse(this.dataset.question);
-        chatMessages.appendChild(botMsg);
-
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        messages.forEach(msg => {
+            if (msg.innerText.toLowerCase().includes(type.replace("_", " "))) {
+                msg.style.display = "block";
+            } else {
+                msg.style.display = "none";
+            }
+        });
     });
 });
-
-// Simple response logic
-function getBotResponse(type) {
-    switch(type) {
-        case "improve_score":
-            return "Improve score by fixing SQLi, XSS, and adding missing headers.";
-        case "add_headers":
-            return "Add headers like Content-Security-Policy, X-Frame-Options, HSTS.";
-        case "fix_sqli":
-            return "Use prepared statements and parameterized queries.";
-        case "fix_xss":
-            return "Sanitize inputs and escape outputs.";
-        case "best_practices":
-            return "Use HTTPS, validate inputs, and keep dependencies updated.";
-        default:
-            return "I'm here to help with security!";
-    }
-}
-
-// Loading screen
-function showLoading() {
-    document.getElementById("loading").style.display = "block";
-}
 </script>
 </body>
+
 </html>

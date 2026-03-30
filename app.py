@@ -58,6 +58,74 @@ def classify_owasp_risk(sqli_vulns, xss_vulns, missing_headers, discovered_urls)
     }
 
 
+def generate_security_suggestions(results, discovered_urls):
+    """Generate tailored security suggestions based on scan results."""
+    suggestions = []
+    owasp_risk = results.get('owasp_risk', {})
+    risk_level = owasp_risk.get('level', 'Low')
+
+    # General suggestions based on risk level
+    if risk_level == "Critical":
+        suggestions.append("🚨 CRITICAL RISK: Immediate action required. Consider taking the site offline until vulnerabilities are patched.")
+    elif risk_level == "High":
+        suggestions.append("⚠️ HIGH RISK: Prioritize fixing vulnerabilities within the next 24-48 hours.")
+    elif risk_level == "Medium":
+        suggestions.append("🟡 MEDIUM RISK: Address issues within the next week.")
+    else:
+        suggestions.append("🟢 LOW RISK: Monitor regularly and apply best practices.")
+
+    # Specific suggestions for SQL Injection
+    sqli = results.get('sqli', [])
+    if sqli:
+        suggestions.append("🔒 SQL Injection Vulnerabilities Detected:")
+        suggestions.append("  • Use prepared statements and parameterized queries")
+        suggestions.append("  • Implement input validation and sanitization")
+        suggestions.append("  • Use ORM libraries that handle SQL escaping")
+        suggestions.append("  • Enable database query logging and monitoring")
+        suggestions.append("  • Consider using Web Application Firewall (WAF)")
+
+    # Specific suggestions for XSS
+    xss = results.get('xss', [])
+    if xss:
+        suggestions.append("🛡️ XSS Vulnerabilities Detected:")
+        suggestions.append("  • Sanitize all user inputs before displaying")
+        suggestions.append("  • Use Content Security Policy (CSP) headers")
+        suggestions.append("  • Implement output encoding (HTML, JavaScript, etc.)")
+        suggestions.append("  • Use secure frameworks that auto-escape content")
+        suggestions.append("  • Validate and filter user input on both client and server side")
+
+    # Specific suggestions for missing headers
+    headers = results.get('headers', [])
+    if headers:
+        suggestions.append("📋 Missing Security Headers:")
+        for header in headers:
+            if header == "Content-Security-Policy":
+                suggestions.append("  • Add CSP header to prevent XSS and data injection")
+            elif header == "X-Frame-Options":
+                suggestions.append("  • Add X-Frame-Options to prevent clickjacking")
+            elif header == "X-XSS-Protection":
+                suggestions.append("  • Add X-XSS-Protection header (though CSP is preferred)")
+        suggestions.append("  • Consider using security headers middleware")
+
+    # General best practices
+    suggestions.append("🏆 General Security Best Practices:")
+    suggestions.append("  • Keep all software and dependencies updated")
+    suggestions.append("  • Implement regular security audits and penetration testing")
+    suggestions.append("  • Use HTTPS everywhere")
+    suggestions.append("  • Implement proper authentication and authorization")
+    suggestions.append("  • Enable logging and monitoring for suspicious activities")
+    suggestions.append("  • Use secure coding practices and code reviews")
+
+    # Surface area considerations
+    if len(discovered_urls) > 50:
+        suggestions.append("🌐 Large Attack Surface Detected:")
+        suggestions.append("  • Consider reducing the number of exposed endpoints")
+        suggestions.append("  • Implement rate limiting and DDoS protection")
+        suggestions.append("  • Use API gateways for better control")
+
+    return suggestions
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     results = None
@@ -76,11 +144,20 @@ def index():
 
         owasp_risk = classify_owasp_risk(sqli, xss, headers, discovered_urls)
 
-        results = {
+        # Generate security suggestions
+        suggestions = generate_security_suggestions({
             "sqli": sqli,
             "xss": xss,
             "headers": headers,
             "owasp_risk": owasp_risk
+        }, discovered_urls)
+
+        results = {
+            "sqli": sqli,
+            "xss": xss,
+            "headers": headers,
+            "owasp_risk": owasp_risk,
+            "suggestions": suggestions
         }
 
         # Store in session for PDF download
@@ -157,6 +234,14 @@ def download_pdf():
             story.append(Paragraph(h, styles['Normal']))
     else:
         story.append(Paragraph("All Required Headers Present", styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    # Security Suggestions
+    story.append(Paragraph("Security Recommendations", styles['Heading2']))
+    suggestions = results.get('suggestions', [])
+    for suggestion in suggestions:
+        story.append(Paragraph(suggestion, styles['Normal']))
+    story.append(Spacer(1, 12))
 
     doc.build(story)
     buffer.seek(0)

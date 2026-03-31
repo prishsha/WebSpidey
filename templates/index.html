@@ -222,8 +222,12 @@
     <p><b>Score:</b> {{ results.owasp_risk.score }} / 10<br>
         <b>Level:</b> {{ results.owasp_risk.level }}
     </p>
-    <p><b>Summary:</b> SQLi={{ results.owasp_risk.details.sql_injection_count }}, XSS={{
-        results.owasp_risk.details.xss_count }}, Missing headers={{ results.owasp_risk.details.missing_headers_count }}
+    <p><b>Summary:</b>
+        SQLi={{ results.owasp_risk.details.sql_injection_count }},
+        XSS={{ results.owasp_risk.details.xss_count }},
+        Redirect={{ results.owasp_risk.details.open_redirect_count }},
+        Data={{ results.owasp_risk.details.sensitive_data_count }},
+        Headers={{ results.owasp_risk.details.missing_headers_count }}
     </p>
 
     <h4>SQL Injection</h4>
@@ -262,6 +266,42 @@
     <p class="safe"><b>All Required Headers Present</b></p>
     {% endif %}
 
+    <h4>Open Redirect</h4>
+    {% if results.open_redirect %}
+    <p class="vuln"><b>Vulnerable</b></p>
+    <ul>
+        {% for u in results.open_redirect %}
+        <li>{{ u }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>Not Detected</b></p>
+    {% endif %}
+
+    <h4>Directory Exposure</h4>
+    {% if results.directories %}
+    <p class="vuln"><b>Exposed</b></p>
+    <ul>
+        {% for d in results.directories %}
+        <li>{{ d }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>Not Detected</b></p>
+    {% endif %}
+
+    <h4>Sensitive Data Exposure</h4>
+    {% if results.sensitive_data %}
+    <p class="vuln"><b>Detected</b></p>
+    <ul>
+        {% for item in results.sensitive_data %}
+        <li>{{ item.url }} ({{ item.type }})</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="safe"><b>Not Detected</b></p>
+    {% endif %}
+
     {% endif %}
 
     <!-- Chatbot Modal -->
@@ -292,150 +332,7 @@
     <button onclick="window.location.href='/download_pdf'">Download PDF Report</button>
     {% endif %}
 
-    <script>
-        const chatbotBtn = document.getElementById('chatbot-btn');
-        const modal = document.getElementById('chatbot-modal');
-        const closeBtn = document.querySelector('.close');
-        const chatMessages = document.getElementById('chat-messages');
-        const input = document.getElementById('chat-input');
-
-        // Backend data
-        const results = JSON.parse(
-            document.getElementById('results-data')?.innerText || "{}"
-        );
-
-        // Open/Close modal
-        chatbotBtn.onclick = () => modal.style.display = "block";
-        closeBtn.onclick = () => modal.style.display = "none";
-
-        window.onclick = (e) => {
-            if (e.target === modal) modal.style.display = "none";
-        };
-
-        // ENTER key support
-        input.addEventListener("keypress", function (e) {
-            if (e.key === "Enter") sendMessage();
-        });
-
-        // Send message
-        function sendMessage() {
-            const text = input.value.trim();
-            if (!text) return;
-
-            addMessage(text, "user-message");
-            input.value = "";
-
-            const reply = generateResponse(text.toLowerCase());
-            addMessage(reply, "bot-message");
-        }
-
-        // Add message to UI
-        function addMessage(text, className) {
-            const msg = document.createElement('div');
-            msg.className = 'message ' + className;
-            msg.innerText = text;
-            chatMessages.appendChild(msg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // 🧠 RULE-BASED CHATBOT
-        function generateResponse(query) {
-
-            const risk = results?.owasp_risk;
-            const sqli = results?.sqli || [];
-            const xss = results?.xss || [];
-            const headers = results?.headers || [];
-            const suggestions = results?.suggestions || [];
-
-            // Greeting
-            if (query.includes("hi") || query.includes("hello")) {
-                return "Hello. I'm your WebSpidey security assistant. I can help you understand vulnerabilities detected in your scan and guide you on how to fix them.";
-            }
-
-            // Risk score (MORE PROFESSIONAL)
-            if (query.includes("score") || query.includes("risk")) {
-                if (!risk) return "No scan data available. Please run a scan first.";
-
-                return `Your application currently has a security score of ${risk.score}/10, which is classified as "${risk.level}" risk.\n\n` +
-                    `This assessment is based on:\n` +
-                    `• ${risk.details.sql_injection_count} SQL Injection issue(s)\n` +
-                    `• ${risk.details.xss_count} XSS vulnerability(ies)\n` +
-                    `• ${risk.details.missing_headers_count} missing security header(s)\n\n` +
-                    `I recommend prioritizing high-impact vulnerabilities such as SQL Injection and XSS.`;
-            }
-
-            // SQL Injection (PERSONALIZED)
-            if (query.includes("sql")) {
-                if (!sqli.length) {
-                    return "Good news — no SQL Injection vulnerabilities were detected in your application. Your input handling for database queries appears to be secure.";
-                }
-
-                return `SQL Injection vulnerabilities were detected on ${sqli.length} endpoint(s).\n\n` +
-                    `Why this matters:\n` +
-                    `SQL Injection can allow attackers to manipulate your database, potentially exposing or modifying sensitive data.\n\n` +
-                    `Recommended actions:\n` +
-                    `• Use parameterized queries or prepared statements\n` +
-                    `• Avoid dynamic SQL string construction\n` +
-                    `• Validate and sanitize all user inputs\n` +
-                    `• Consider using an ORM for safer query handling`;
-            }
-
-            // XSS (PERSONALIZED)
-            if (query.includes("xss")) {
-                if (!xss.length) {
-                    return "No Cross-Site Scripting (XSS) vulnerabilities were identified. Your application appears to be handling user-generated content safely.";
-                }
-
-                return `Cross-Site Scripting (XSS) vulnerabilities were found on ${xss.length} endpoint(s).\n\n` +
-                    `Impact:\n` +
-                    `Attackers may inject malicious scripts that execute in users' browsers, leading to session hijacking or data theft.\n\n` +
-                    `Recommended fixes:\n` +
-                    `• Sanitize and escape all user inputs before rendering\n` +
-                    `• Implement a strong Content Security Policy (CSP)\n` +
-                    `• Avoid directly injecting HTML/JS into pages\n` +
-                    `• Use frameworks that auto-escape content`;
-            }
-
-            // Headers (MORE INSIGHTFUL)
-            if (query.includes("header")) {
-                if (!headers.length) {
-                    return "All critical security headers are properly configured. This significantly improves your application's defense against common web attacks.";
-                }
-
-                return `Your application is missing ${headers.length} important security header(s):\n\n` +
-                    `• ${headers.join("\n• ")}\n\n` +
-                    `Why this matters:\n` +
-                    `Security headers help protect against attacks like XSS, clickjacking, and data injection.\n\n` +
-                    `Recommendation:\n` +
-                    `Implement these headers at the server or middleware level for consistent protection.`;
-            }
-
-            // Improve security (TAILORED)
-            if (query.includes("improve") || query.includes("fix") || query.includes("secure")) {
-                if (!suggestions.length) {
-                    return "No specific recommendations available. Please run a scan first.";
-                }
-
-                return `Based on your scan results, here are the most important actions you should take:\n\n` +
-                    suggestions.slice(0, 5).map(s => `• ${s}`).join("\n") +
-                    `\n\nStart by addressing critical vulnerabilities first for maximum impact.`;
-            }
-
-            // General best practices
-            if (query.includes("best") || query.includes("practice")) {
-                return `Here are some essential web security best practices:\n\n` +
-                    `• Always use HTTPS\n` +
-                    `• Validate and sanitize all inputs\n` +
-                    `• Implement proper authentication and authorization\n` +
-                    `• Keep dependencies updated\n` +
-                    `• Enable logging and monitoring\n` +
-                    `• Conduct regular security testing`;
-            }
-
-            // Default (SMARTER FALLBACK)
-            return "I'm here to help with your security scan results. You can ask about your risk score, SQL Injection, XSS vulnerabilities, headers, or how to improve your security posture.";
-        }
-    </script>
+    <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
 </body>
 
 </html>

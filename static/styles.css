@@ -1,0 +1,151 @@
+body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+input {
+    padding: 12px;
+    width: 70%;
+    background: #161b22;
+    border: 1px solid #30363d;
+    color: white;
+    border-radius: 6px;
+}
+
+button {
+    padding: 12px;
+    background: #238636;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2ea043;
+}
+
+.card {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.score {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+/* Severity colors */
+.critical { background: #ff4d4d; }
+.high { background: #ff8800; }
+.medium { background: #3b82f6; }
+.low { background: #22c55e; }
+
+/* Graph */
+.graph {
+    margin-top: 15px;
+}
+
+.bar {
+    height: 20px;
+    margin: 5px 0;
+    border-radius: 5px;
+    padding-left: 10px;
+    font-size: 12px;
+}
+
+.red { background: #ff4d4d; }
+.orange { background: #ff8800; }
+.blue { background: #3b82f6; }
+
+.vuln { color: #ff4d4d; }
+.safe { color: #22c55e; }
+
+/* Chatbot */
+#chatbot-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #238636;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background: #161b22;
+    margin: 5% auto;
+    padding: 20px;
+    width: 400px;
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 10px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px 0;
+    white-space: pre-line;
+}
+
+.user-message { background: #238636; }
+.bot-message { background: #30363d; }
+
+.mini-list {
+    margin-top: 10px;
+    padding-left: 15px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.mini-list li {
+    margin-bottom: 4px;
+    word-break: break-all;
+}

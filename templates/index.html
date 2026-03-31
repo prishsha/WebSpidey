@@ -1,338 +1,203 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>WebSpidey Vulnerability Scanner</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #121212;
-            color: #e4e4e4;
-        }
-
-        h2,
-        h3,
-        h4 {
-            color: #ffffff;
-        }
-
-        input {
-            width: 320px;
-            padding: 10px;
-            background-color: #1e1e1e;
-            color: #ffffff;
-            border: 1px solid #444;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 10px 18px;
-            background-color: #2d7dff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #1f5fd1;
-        }
-
-        ul {
-            margin-top: 5px;
-        }
-
-        hr {
-            border: 0;
-            height: 1px;
-            background: #333;
-            margin: 30px 0;
-        }
-
-        .vuln {
-            color: #ff5c5c;
-        }
-
-        .safe {
-            color: #4caf50;
-        }
-
-        /* Loading Overlay */
-        #loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(18, 18, 18, 0.95);
-            z-index: 9999;
-            text-align: center;
-            padding-top: 200px;
-            color: #fff;
-        }
-
-        .spinner {
-            border: 6px solid #333;
-            border-top: 6px solid #2d7dff;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            margin: auto;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Chatbot Styles */
-        #chatbot-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background-color: #2d7dff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            padding: 0;
-            outline: none;
-        }
-
-        #chatbot-btn:hover {
-            background-color: #1f5fd1;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: #1e1e1e;
-            color: #e4e4e4;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #444;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: white;
-        }
-
-        #chat-messages {
-            margin-bottom: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .user-message {
-            background-color: #2d7dff;
-            text-align: right;
-        }
-
-        .bot-message {
-            background-color: #333;
-        }
-
-        .question-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #444;
-            color: #e4e4e4;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .question-btn:hover {
-            background-color: #555;
-        }
-    </style>
+    <title>WebSpidey Scanner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loading">
-        <div class="spinner"></div>
-        <h3>Scanning website... Please wait</h3>
-    </div>
+<div class="container">
 
-    <h2>🕷️ WebSpidey Vulnerability Scanner</h2>
+    <h1>🕷️ WebSpidey Dashboard</h1>
 
-    <form method="POST" onsubmit="showLoading()">
-        <input type="text" name="url" placeholder="Enter URL (e.g. http://127.0.0.1:9000)" required>
-        <button type="submit">Scan</button>
+    <form method="POST">
+        <input type="text" name="url" placeholder="Enter target URL" required>
+        <button type="submit" onsubmit="showLoading()">Scan</button>
     </form>
 
     {% if urls %}
-    <hr>
-    <h3>Discovered URLs</h3>
-    <ul>
+<div class="card">
+    <h3>🌐 Discovered URLs</h3>
+    <ul class="url-list">
         {% for u in urls %}
         <li>{{ u }}</li>
         {% endfor %}
     </ul>
-    {% endif %}
+</div>
+{% endif %}
 
     {% if results %}
-    <hr>
-    <h3>Scan Results</h3>
 
-    <h4>OWASP Risk Score</h4>
-    <p><b>Score:</b> {{ results.owasp_risk.score }} / 10<br>
-        <b>Level:</b> {{ results.owasp_risk.level }}
-    </p>
-    <p><b>Summary:</b>
-        SQLi={{ results.owasp_risk.details.sql_injection_count }},
-        XSS={{ results.owasp_risk.details.xss_count }},
-        Redirect={{ results.owasp_risk.details.open_redirect_count }},
-        Data={{ results.owasp_risk.details.sensitive_data_count }},
-        Headers={{ results.owasp_risk.details.missing_headers_count }}
-    </p>
+    <!-- 🔥 Risk Card -->
+    <div class="card risk-card">
+        <h3>OWASP Risk Score</h3>
 
-    <h4>SQL Injection</h4>
-    {% if results.sqli %}
-    <p class="vuln"><b>Vulnerable</b></p>
-    <ul>
-        {% for u in results.sqli %}
-        <li>{{ u }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>Not Detected</b></p>
-    {% endif %}
+        <div class="score">{{ results.owasp_risk.score }}/10</div>
 
-    <h4>XSS</h4>
-    {% if results.xss %}
-    <p class="vuln"><b>Vulnerable</b></p>
-    <ul>
-        {% for u in results.xss %}
-        <li>{{ u }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>Not Detected</b></p>
-    {% endif %}
+        <div class="badge {{ results.owasp_risk.level|lower }}">
+            {{ results.owasp_risk.level }}
+        </div>
 
-    <h4>Security Headers</h4>
-    {% if results.headers %}
-    <p class="vuln"><b>Missing Headers:</b></p>
-    <ul>
-        {% for h in results.headers %}
-        <li>{{ h }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>All Required Headers Present</b></p>
-    {% endif %}
-
-    <h4>Open Redirect</h4>
-    {% if results.open_redirect %}
-    <p class="vuln"><b>Vulnerable</b></p>
-    <ul>
-        {% for u in results.open_redirect %}
-        <li>{{ u }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>Not Detected</b></p>
-    {% endif %}
-
-    <h4>Directory Exposure</h4>
-    {% if results.directories %}
-    <p class="vuln"><b>Exposed</b></p>
-    <ul>
-        {% for d in results.directories %}
-        <li>{{ d }}</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>Not Detected</b></p>
-    {% endif %}
-
-    <h4>Sensitive Data Exposure</h4>
-    {% if results.sensitive_data %}
-    <p class="vuln"><b>Detected</b></p>
-    <ul>
-        {% for item in results.sensitive_data %}
-        <li>{{ item.url }} ({{ item.type }})</li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="safe"><b>Not Detected</b></p>
-    {% endif %}
-
-    {% endif %}
-
-    <!-- Chatbot Modal -->
-    <div id="chatbot-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>🛡️ Security Assistant</h3>
-
-            <div id="chat-messages"></div>
-
-            <!-- INPUT AREA -->
-            <div style="display:flex; gap:10px;">
-                <input id="chat-input" type="text" placeholder="Ask something..." style="flex:1;">
-                <button onclick="sendMessage()">Send</button>
+        <!-- Graph Bars -->
+        <div class="graph">
+            <div class="bar red" style="width: {{ results.owasp_risk.details.sql_injection_count * 15 }}%">
+                SQLi
+            </div>
+            <div class="bar orange" style="width: {{ results.owasp_risk.details.xss_count * 15 }}%">
+                XSS
+            </div>
+            <div class="bar blue" style="width: {{ results.owasp_risk.details.open_redirect_count * 15 }}%">
+                Redirect
             </div>
         </div>
     </div>
 
-    <div id="results-data" style="display:none;">
-        {{ results | tojson if results else '{}' }}
+    <!-- 🔥 Vulnerability Grid -->
+  <div class="grid">
+
+    <!-- SQL Injection -->
+    <div class="card">
+        <h4>SQL Injection</h4>
+        <span class="badge critical">CRITICAL</span>
+
+        {% if results.sqli %}
+            <p class="vuln">Detected ({{ results.sqli|length }})</p>
+            <ul class="mini-list">
+                {% for u in results.sqli %}
+                <li>{{ u }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">Not Detected</p>
+        {% endif %}
     </div>
 
-    <!-- Floating Chatbot Button -->
-    <button id="chatbot-btn">🛡️</button>
+    <!-- XSS -->
+    <div class="card">
+        <h4>XSS</h4>
+        <span class="badge high">HIGH</span>
 
-    {% if results %}
-    <hr>
-    <button onclick="window.location.href='/download_pdf'">Download PDF Report</button>
+        {% if results.xss %}
+            <p class="vuln">Detected ({{ results.xss|length }})</p>
+            <ul class="mini-list">
+                {% for u in results.xss %}
+                <li>{{ u }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">Not Detected</p>
+        {% endif %}
+    </div>
+
+    <!-- Open Redirect -->
+    <div class="card">
+        <h4>Open Redirect</h4>
+        <span class="badge medium">MEDIUM</span>
+
+        {% if results.open_redirect %}
+            <p class="vuln">Detected ({{ results.open_redirect|length }})</p>
+            <ul class="mini-list">
+                {% for u in results.open_redirect %}
+                <li>{{ u }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">Not Detected</p>
+        {% endif %}
+    </div>
+
+    <!-- Sensitive Data -->
+    <div class="card">
+        <h4>Sensitive Data</h4>
+        <span class="badge critical">CRITICAL</span>
+
+        {% if results.sensitive_data %}
+            <p class="vuln">Detected ({{ results.sensitive_data|length }})</p>
+            <ul class="mini-list">
+                {% for item in results.sensitive_data %}
+                <li>{{ item.url }} ({{ item.type }})</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">Not Detected</p>
+        {% endif %}
+    </div>
+
+    <!-- Headers -->
+    <div class="card">
+        <h4>Headers</h4>
+        <span class="badge low">LOW</span>
+
+        {% if results.headers %}
+            <p class="vuln">Missing ({{ results.headers|length }})</p>
+            <ul class="mini-list">
+                {% for h in results.headers %}
+                <li>{{ h }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">All Present</p>
+        {% endif %}
+    </div>
+
+    <!-- Directories -->
+    <div class="card">
+        <h4>Directories</h4>
+        <span class="badge medium">MEDIUM</span>
+
+        {% if results.directories %}
+            <p class="vuln">Exposed ({{ results.directories|length }})</p>
+            <ul class="mini-list">
+                {% for d in results.directories %}
+                <li>{{ d }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="safe">Not Detected</p>
+        {% endif %}
+    </div>
+
+</div>
+
+    
+
     {% endif %}
 
-    <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
-</body>
+</div>
 
+<!-- Chatbot -->
+<div id="chatbot-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>🛡️ Security Assistant</h3>
+
+        <div id="chat-messages"></div>
+
+        <div class="chat-input">
+            <input id="chat-input" placeholder="Ask about your scan...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+</div>
+
+{% if results %}
+<div style="text-align:center; margin-top:20px;">
+    <button onclick="window.location.href='/download_pdf'">
+        📄 Download Full Report
+    </button>
+</div>
+{% endif %}
+
+
+<div id="results-data" style="display:none;">
+    {{ results | tojson if results else '{}' }}
+</div>
+
+<button id="chatbot-btn">🛡️</button>
+
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+</body>
 </html>

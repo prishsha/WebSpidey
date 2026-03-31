@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, session
 
 from crawler import crawl
-from sqlScanner import scan_sql_injection
-from xssScanner import scan_xss
-from headerScanner import scan_headers
+from scanners.sqlScanner import scan_sql_injection
+from scanners.xssScanner import scan_xss
+from scanners.headerScanner import scan_headers
 
 from services.risk import classify_owasp_risk, generate_security_suggestions
 from services.pdf_generator import generate_pdf

@@ -1,5 +1,5 @@
 from crawler import crawl
-from sqlScanner import scan_sql_injection
+from scanners.sqlScanner import scan_sql_injection
 
 target_url = "http://testphp.vulnweb.com"
 

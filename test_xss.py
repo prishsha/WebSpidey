@@ -1,5 +1,5 @@
 from crawler import crawl
-from xssScanner import scan_xss
+from scanners.xssScanner import scan_xss
 
 target_url = "http://testphp.vulnweb.com"
 

@@ -1,4 +1,4 @@
-from headerScanner import scan_headers
+from scanners.headerScanner import scan_headers
 
 target_url = "http://testphp.vulnweb.com"
 

@@ -1,203 +1,228 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebSpidey Scanner</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-
-<div class="container">
-
-    <h1>🕷️ WebSpidey Dashboard</h1>
-
-    <form method="POST">
-        <input type="text" name="url" placeholder="Enter target URL" required>
-        <button type="submit" onsubmit="showLoading()">Scan</button>
-    </form>
-
-    {% if urls %}
-<div class="card">
-    <h3>🌐 Discovered URLs</h3>
-    <ul class="url-list">
-        {% for u in urls %}
-        <li>{{ u }}</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-
-    {% if results %}
-
-    <!-- 🔥 Risk Card -->
-    <div class="card risk-card">
-        <h3>OWASP Risk Score</h3>
-
-        <div class="score">{{ results.owasp_risk.score }}/10</div>
-
-        <div class="badge {{ results.owasp_risk.level|lower }}">
-            {{ results.owasp_risk.level }}
-        </div>
-
-        <!-- Graph Bars -->
-        <div class="graph">
-            <div class="bar red" style="width: {{ results.owasp_risk.details.sql_injection_count * 15 }}%">
-                SQLi
+    <div class="page-shell">
+        <header class="hero-panel">
+            <div class="hero-copy">
+                <span class="eyebrow">Web Vulnerability Scanner</span>
+                <h1>WebSpidey</h1>
+                <p>Scan websites fast with a sleek security dashboard, clear findings, and guided remediation hints.</p>
+                <div class="hero-actions">
+                    <form class="scan-form" method="POST">
+                        <input type="url" name="url" placeholder="https://example.com" required>
+                        <button type="submit">Start Scan</button>
+                    </form>
+                    <span class="badge info">Powered by OWASP insights</span>
+                </div>
             </div>
-            <div class="bar orange" style="width: {{ results.owasp_risk.details.xss_count * 15 }}%">
-                XSS
+            <div class="hero-visual">
+                <div class="status-card">
+                    <span>Latest scan</span>
+                    <strong>{{ results.owasp_risk.score if results else '—' }}/10</strong>
+                    <small>{{ results.owasp_risk.level if results else 'Ready to scan' }}</small>
+                </div>
             </div>
-            <div class="bar blue" style="width: {{ results.owasp_risk.details.open_redirect_count * 15 }}%">
-                Redirect
+        </header>
+
+        <main class="container">
+            {% if urls %}
+                <section class="card panel-card">
+                    <div class="panel-heading">
+                        <h2>Discovered Endpoints</h2>
+                        <span class="pill">{{ urls|length }} URLs</span>
+                    </div>
+                    <ul class="url-list">
+                        {% for u in urls %}
+                            <li>{{ u }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+
+            {% if results %}
+                <section class="summary-grid">
+                    <article class="summary-card">
+                        <span class="summary-label">Risk Score</span>
+                        <strong>{{ results.owasp_risk.score }}/10</strong>
+                        <p class="summary-note">{{ results.owasp_risk.level }} severity</p>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-label">SQLi Findings</span>
+                        <strong>{{ results.sqli|length }}</strong>
+                        <p class="summary-note">Potential injection points</p>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-label">XSS Findings</span>
+                        <strong>{{ results.xss|length }}</strong>
+                        <p class="summary-note">Cross-site scripting risks</p>
+                    </article>
+                    <article class="summary-card">
+                        <span class="summary-label">Exposed Directories</span>
+                        <strong>{{ results.directories|length }}</strong>
+                        <p class="summary-note">Path disclosures detected</p>
+                    </article>
+                </section>
+
+                <section class="card risk-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>OWASP Risk Breakdown</h2>
+                            <p>Compare critical attack surfaces across your latest scan.</p>
+                        </div>
+                        <span class="pill {{ results.owasp_risk.level|lower }}">{{ results.owasp_risk.level }}</span>
+                    </div>
+                    <div class="graph">
+                        <div class="graph-row">
+                            <span>SQL Injection</span>
+                            <div class="graph-bar-wrap"><div class="graph-bar red" style="width: {{ results.owasp_risk.details.sql_injection_count * 15 }}%"></div></div>
+                            <strong>{{ results.owasp_risk.details.sql_injection_count }}</strong>
+                        </div>
+                        <div class="graph-row">
+                            <span>XSS</span>
+                            <div class="graph-bar-wrap"><div class="graph-bar orange" style="width: {{ results.owasp_risk.details.xss_count * 15 }}%"></div></div>
+                            <strong>{{ results.owasp_risk.details.xss_count }}</strong>
+                        </div>
+                        <div class="graph-row">
+                            <span>Redirect</span>
+                            <div class="graph-bar-wrap"><div class="graph-bar blue" style="width: {{ results.owasp_risk.details.open_redirect_count * 15 }}%"></div></div>
+                            <strong>{{ results.owasp_risk.details.open_redirect_count }}</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="grid detail-grid">
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>SQL Injection</h3>
+                            <span class="badge critical">CRITICAL</span>
+                        </div>
+                        {% if results.sqli %}
+                            <p class="status fail">Detected <strong>({{ results.sqli|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for u in results.sqli %}
+                                    <li>{{ u }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">Not Detected</p>
+                        {% endif %}
+                    </article>
+
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>XSS</h3>
+                            <span class="badge high">HIGH</span>
+                        </div>
+                        {% if results.xss %}
+                            <p class="status fail">Detected <strong>({{ results.xss|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for u in results.xss %}
+                                    <li>{{ u }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">Not Detected</p>
+                        {% endif %}
+                    </article>
+
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>Open Redirect</h3>
+                            <span class="badge medium">MEDIUM</span>
+                        </div>
+                        {% if results.open_redirect %}
+                            <p class="status warn">Detected <strong>({{ results.open_redirect|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for u in results.open_redirect %}
+                                    <li>{{ u }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">Not Detected</p>
+                        {% endif %}
+                    </article>
+
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>Sensitive Data</h3>
+                            <span class="badge critical">CRITICAL</span>
+                        </div>
+                        {% if results.sensitive_data %}
+                            <p class="status fail">Detected <strong>({{ results.sensitive_data|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for item in results.sensitive_data %}
+                                    <li>{{ item.url }} ({{ item.type }})</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">Not Detected</p>
+                        {% endif %}
+                    </article>
+
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>Headers</h3>
+                            <span class="badge low">LOW</span>
+                        </div>
+                        {% if results.headers %}
+                            <p class="status warn">Missing <strong>({{ results.headers|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for h in results.headers %}
+                                    <li>{{ h }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">All Present</p>
+                        {% endif %}
+                    </article>
+
+                    <article class="detail-card">
+                        <div class="detail-card-title">
+                            <h3>Directories</h3>
+                            <span class="badge medium">MEDIUM</span>
+                        </div>
+                        {% if results.directories %}
+                            <p class="status warn">Exposed <strong>({{ results.directories|length }})</strong></p>
+                            <ul class="mini-list">
+                                {% for d in results.directories %}
+                                    <li>{{ d }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="status pass">Not Detected</p>
+                        {% endif %}
+                    </article>
+                </section>
+
+                <div class="report-action">
+                    <button onclick="window.location.href='/download_pdf'" class="download-report">📄 Download comprehensive PDF</button>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Chatbot -->
+    <div id="chatbot-modal" class="modal">
+        <div class="modal-content">
+            <button class="close" aria-label="Close chat">×</button>
+            <h3>🛡️ Security Assistant</h3>
+            <div id="chat-messages"></div>
+            <div class="chat-input">
+                <input id="chat-input" placeholder="Ask about your scan...">
+                <button onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
 
-    <!-- 🔥 Vulnerability Grid -->
-  <div class="grid">
-
-    <!-- SQL Injection -->
-    <div class="card">
-        <h4>SQL Injection</h4>
-        <span class="badge critical">CRITICAL</span>
-
-        {% if results.sqli %}
-            <p class="vuln">Detected ({{ results.sqli|length }})</p>
-            <ul class="mini-list">
-                {% for u in results.sqli %}
-                <li>{{ u }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">Not Detected</p>
-        {% endif %}
-    </div>
-
-    <!-- XSS -->
-    <div class="card">
-        <h4>XSS</h4>
-        <span class="badge high">HIGH</span>
-
-        {% if results.xss %}
-            <p class="vuln">Detected ({{ results.xss|length }})</p>
-            <ul class="mini-list">
-                {% for u in results.xss %}
-                <li>{{ u }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">Not Detected</p>
-        {% endif %}
-    </div>
-
-    <!-- Open Redirect -->
-    <div class="card">
-        <h4>Open Redirect</h4>
-        <span class="badge medium">MEDIUM</span>
-
-        {% if results.open_redirect %}
-            <p class="vuln">Detected ({{ results.open_redirect|length }})</p>
-            <ul class="mini-list">
-                {% for u in results.open_redirect %}
-                <li>{{ u }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">Not Detected</p>
-        {% endif %}
-    </div>
-
-    <!-- Sensitive Data -->
-    <div class="card">
-        <h4>Sensitive Data</h4>
-        <span class="badge critical">CRITICAL</span>
-
-        {% if results.sensitive_data %}
-            <p class="vuln">Detected ({{ results.sensitive_data|length }})</p>
-            <ul class="mini-list">
-                {% for item in results.sensitive_data %}
-                <li>{{ item.url }} ({{ item.type }})</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">Not Detected</p>
-        {% endif %}
-    </div>
-
-    <!-- Headers -->
-    <div class="card">
-        <h4>Headers</h4>
-        <span class="badge low">LOW</span>
-
-        {% if results.headers %}
-            <p class="vuln">Missing ({{ results.headers|length }})</p>
-            <ul class="mini-list">
-                {% for h in results.headers %}
-                <li>{{ h }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">All Present</p>
-        {% endif %}
-    </div>
-
-    <!-- Directories -->
-    <div class="card">
-        <h4>Directories</h4>
-        <span class="badge medium">MEDIUM</span>
-
-        {% if results.directories %}
-            <p class="vuln">Exposed ({{ results.directories|length }})</p>
-            <ul class="mini-list">
-                {% for d in results.directories %}
-                <li>{{ d }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="safe">Not Detected</p>
-        {% endif %}
-    </div>
-
-</div>
-
-    
-
-    {% endif %}
-
-</div>
-
-<!-- Chatbot -->
-<div id="chatbot-modal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>🛡️ Security Assistant</h3>
-
-        <div id="chat-messages"></div>
-
-        <div class="chat-input">
-            <input id="chat-input" placeholder="Ask about your scan...">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-    </div>
-
-</div>
-
-{% if results %}
-<div style="text-align:center; margin-top:20px;">
-    <button onclick="window.location.href='/download_pdf'">
-        📄 Download Full Report
-    </button>
-</div>
-{% endif %}
-
-
-<div id="results-data" style="display:none;">
-    {{ results | tojson if results else '{}' }}
-</div>
-
-<button id="chatbot-btn">🛡️</button>
-
-<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
-
+    <button id="chatbot-btn" aria-label="Open security assistant">🛡️</button>
+    <div id="results-data" style="display:none;">{{ results | tojson if results else '{}' }}</div>
+    <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
 </body>
 </html>
